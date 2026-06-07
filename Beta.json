@@ -1,0 +1,738 @@
+import React, { useState, useEffect, useRef } from 'react';
+
+// OFICJALNY, ZWERYFIKOWANY TERMINARZ MŚ 2026
+const OFFICIAL_GROUP_MATCHES = [
+  // 11 czerwca
+  { id: 1, group: 'Grupa A', stage: 'Meksyk - RPA', team_home: 'Meksyk', team_away: 'RPA', kickoff: '2026-06-01T21:00:00', info: 'Meksyk', score_home: null, score_away: null },
+  // 12 czerwca (noc z 11 na 12)
+  { id: 2, group: 'Grupa A', stage: 'Korea Płd. - Czechy', team_home: 'Korea Płd.', team_away: 'Czechy', kickoff: '2026-06-12T04:00:00', info: 'Guadalajara/Zapopan', score_home: null, score_away: null },
+  { id: 3, group: 'Grupa B', stage: 'Kanada - Bośnia i Herc.', team_home: 'Kanada', team_away: 'Bośnia i Hercegowina', kickoff: '2026-06-12T21:00:00', info: 'Toronto', score_home: null, score_away: null },
+  // 13 czerwca (noc z 12 na 13)
+  { id: 4, group: 'Grupa D', stage: 'USA - Paragwaj', team_home: 'USA', team_away: 'Paragwaj', kickoff: '2026-06-13T03:00:00', info: 'Los Angeles/Inglewood', score_home: null, score_away: null },
+  { id: 5, group: 'Grupa B', stage: 'Katar - Szwajcaria', team_home: 'Katar', team_away: 'Szwajcaria', kickoff: '2026-06-13T21:00:00', info: 'San Francisco/Santa Clara', score_home: null, score_away: null },
+  // 14 czerwca (noc z 13 na 14)
+  { id: 6, group: 'Grupa C', stage: 'Brazylia - Maroko', team_home: 'Brazylia', team_away: 'Maroko', kickoff: '2026-06-14T00:00:00', info: 'Nowy Jork/East Rutherford', score_home: null, score_away: null },
+  { id: 7, group: 'Grupa C', stage: 'Haiti - Szkocja', team_home: 'Haiti', team_away: 'Szkocja', kickoff: '2026-06-14T03:00:00', info: 'Boston/Foxborough', score_home: null, score_away: null },
+  { id: 8, group: 'Grupa D', stage: 'Australia - Turcja', team_home: 'Australia', team_away: 'Turcja', kickoff: '2026-06-14T06:00:00', info: 'Vancouver', score_home: null, score_away: null },
+  { id: 9, group: 'Grupa E', stage: 'Niemcy - Curacao', team_home: 'Niemcy', team_away: 'Curacao', kickoff: '2026-06-14T19:00:00', info: 'Houston', score_home: null, score_away: null },
+  { id: 10, group: 'Grupa F', stage: 'Holandia - Japonia', team_home: 'Holandia', team_away: 'Japonia', kickoff: '2026-06-14T22:00:00', info: 'Dallas/Arlington', score_home: null, score_away: null },
+  // 15 czerwca (noc z 14 na 15)
+  { id: 11, group: 'Grupa E', stage: 'WKS - Ekwador', team_home: 'Wybrzeże Kości Słoniowej', team_away: 'Ekwador', kickoff: '2026-06-15T01:00:00', info: 'Filadelfia', score_home: null, score_away: null },
+  { id: 12, group: 'Grupa F', stage: 'Szwecja - Tunezja', team_home: 'Szwecja', team_away: 'Tunezja', kickoff: '2026-06-15T04:00:00', info: 'Monterrey/Guadalupe', score_home: null, score_away: null },
+  { id: 13, group: 'Grupa H', stage: 'Hiszpania - Rep. Ziel. Przyk.', team_home: 'Hiszpania', team_away: 'Rep. Zielonego Przylądka', kickoff: '2026-06-15T18:00:00', info: 'Atlanta', score_home: null, score_away: null },
+  { id: 14, group: 'Grupa G', stage: 'Belgia - Egipt', team_home: 'Belgia', team_away: 'Egipt', kickoff: '2026-06-15T21:00:00', info: 'Seattle', score_home: null, score_away: null },
+  // 16 czerwca (noc z 15 na 16)
+  { id: 15, group: 'Grupa H', stage: 'Arabia Saud. - Urugwaj', team_home: 'Arabia Saudyjska', team_away: 'Urugwaj', kickoff: '2026-06-16T00:00:00', info: 'Miami/Miami Gardens', score_home: null, score_away: null },
+  { id: 16, group: 'Grupa G', stage: 'Iran - Nowa Zelandia', team_home: 'Iran', team_away: 'Nowa Zelandia', kickoff: '2026-06-16T03:00:00', info: 'Los Angeles/Inglewood', score_home: null, score_away: null },
+  { id: 17, group: 'Grupa I', stage: 'Francja - Senegal', team_home: 'Francja', team_away: 'Senegal', kickoff: '2026-06-16T21:00:00', info: 'Nowy Jork/East Rutherford', score_home: null, score_away: null },
+  // 17 czerwca (noc z 16 na 17)
+  { id: 18, group: 'Grupa I', stage: 'Irak - Norwegia', team_home: 'Irak', team_away: 'Norwegia', kickoff: '2026-06-17T00:00:00', info: 'Boston/Foxborough', score_home: null, score_away: null },
+  { id: 19, group: 'Grupa J', stage: 'Argentyna - Algieria', team_home: 'Argentyna', team_away: 'Algieria', kickoff: '2026-06-17T03:00:00', info: 'Kansas City', score_home: null, score_away: null },
+  { id: 20, group: 'Grupa J', stage: 'Austria - Jordania', team_home: 'Austria', team_away: 'Jordania', kickoff: '2026-06-17T06:00:00', info: 'San Francisco/Santa Clara', score_home: null, score_away: null },
+  { id: 21, group: 'Grupa K', stage: 'Portugalia - DR Konga', team_home: 'Portugalia', team_away: 'DR Konga', kickoff: '2026-06-17T19:00:00', info: 'Houston', score_home: null, score_away: null },
+  { id: 22, group: 'Grupa L', stage: 'Anglia - Chorwacja', team_home: 'Anglia', team_away: 'Chorwacja', kickoff: '2026-06-17T22:00:00', info: 'Dallas/Arlington', score_home: null, score_away: null },
+  // 18 czerwca (noc z 17 na 18)
+  { id: 23, group: 'Grupa L', stage: 'Ghana - Panama', team_home: 'Ghana', team_away: 'Panama', kickoff: '2026-06-18T01:00:00', info: 'Toronto', score_home: null, score_away: null },
+  { id: 24, group: 'Grupa K', stage: 'Uzbekistan - Kolumbia', team_home: 'Uzbekistan', team_away: 'Kolumbia', kickoff: '2026-06-18T04:00:00', info: 'Meksyk', score_home: null, score_away: null },
+  { id: 25, group: 'Grupa A', stage: 'Czechy - RPA', team_home: 'Czechy', team_away: 'RPA', kickoff: '2026-06-18T18:00:00', info: 'Atlanta', score_home: null, score_away: null },
+  { id: 26, group: 'Grupa B', stage: 'Szwajcaria - Bośnia i Herc.', team_home: 'Szwajcaria', team_away: 'Bośnia i Hercegowina', kickoff: '2026-06-18T21:00:00', info: 'Los Angeles/Inglewood', score_home: null, score_away: null },
+  // 19 czerwca (noc z 18 na 19)
+  { id: 27, group: 'Grupa B', stage: 'Kanada - Katar', team_home: 'Kanada', team_away: 'Katar', kickoff: '2026-06-19T00:00:00', info: 'Vancouver', score_home: null, score_away: null },
+  { id: 28, group: 'Grupa A', stage: 'Meksyk - Korea Płd.', team_home: 'Meksyk', team_away: 'Korea Płd.', kickoff: '2026-06-19T03:00:00', info: 'Guadalajara/Zapopan', score_home: null, score_away: null },
+  { id: 29, group: 'Grupa D', stage: 'USA - Australia', team_home: 'USA', team_away: 'Australia', kickoff: '2026-06-19T21:00:00', info: 'Seattle', score_home: null, score_away: null },
+  // 20 czerwca (noc z 19 na 20)
+  { id: 30, group: 'Grupa C', stage: 'Szkocja - Maroko', team_home: 'Szkocja', team_away: 'Maroko', kickoff: '2026-06-20T00:00:00', info: 'Boston/Foxborough', score_home: null, score_away: null },
+  { id: 31, group: 'Grupa C', stage: 'Brazylia - Haiti', team_home: 'Brazylia', team_away: 'Haiti', kickoff: '2026-06-20T03:00:00', info: 'Filadelfia', score_home: null, score_away: null },
+  { id: 32, group: 'Grupa D', stage: 'Turcja - Paragwaj', team_home: 'Turcja', team_away: 'Paragwaj', kickoff: '2026-06-20T06:00:00', info: 'San Francisco/Santa Clara', score_home: null, score_away: null },
+  { id: 33, group: 'Grupa F', stage: 'Holandia - Szwecja', team_home: 'Holandia', team_away: 'Szwecja', kickoff: '2026-06-20T19:00:00', info: 'Houston', score_home: null, score_away: null },
+  { id: 34, group: 'Grupa E', stage: 'Niemcy - WKS', team_home: 'Niemcy', team_away: 'Wybrzeże Kości Słoniowej', kickoff: '2026-06-20T22:00:00', info: 'Toronto', score_home: null, score_away: null },
+  // 21 czerwca (noc z 20 na 21)
+  { id: 35, group: 'Grupa E', stage: 'Ekwador - Curacao', team_home: 'Ekwador', team_away: 'Curacao', kickoff: '2026-06-21T02:00:00', info: 'Kansas City', score_home: null, score_away: null },
+  { id: 36, group: 'Grupa F', stage: 'Tunezja - Japonia', team_home: 'Tunezja', team_away: 'Japonia', kickoff: '2026-06-21T06:00:00', info: 'Monterrey/Guadalupe', score_home: null, score_away: null },
+  { id: 37, group: 'Grupa H', stage: 'Hiszpania - Arabia Saud.', team_home: 'Hiszpania', team_away: 'Arabia Saudyjska', kickoff: '2026-06-21T18:00:00', info: 'Atlanta', score_home: null, score_away: null },
+  { id: 38, group: 'Grupa G', stage: 'Belgia - Iran', team_home: 'Belgia', team_away: 'Iran', kickoff: '2026-06-21T21:00:00', info: 'Los Angeles/Inglewood', score_home: null, score_away: null },
+  // 22 czerwca (noc z 21 na 22)
+  { id: 39, group: 'Grupa H', stage: 'Urugwaj - Rep. Ziel. Przyk.', team_home: 'Urugwaj', team_away: 'Rep. Zielonego Przylądka', kickoff: '2026-06-22T00:00:00', info: 'Miami/Miami Gardens', score_home: null, score_away: null },
+  { id: 40, group: 'Grupa G', stage: 'Nowa Zelandia - Egipt', team_home: 'Nowa Zelandia', team_away: 'Egipt', kickoff: '2026-06-22T03:00:00', info: 'Vancouver', score_home: null, score_away: null },
+  { id: 41, group: 'Grupa J', stage: 'Argentyna - Austria', team_home: 'Argentyna', team_away: 'Austria', kickoff: '2026-06-22T19:00:00', info: 'Dallas/Arlington', score_home: null, score_away: null },
+  { id: 42, group: 'Grupa I', stage: 'Francja - Irak', team_home: 'Francja', team_away: 'Irak', kickoff: '2026-06-22T23:00:00', info: 'Filadelfia', score_home: null, score_away: null },
+  // 23 czerwca (noc z 22 na 23)
+  { id: 43, group: 'Grupa I', stage: 'Norwegia - Senegal', team_home: 'Norwegia', team_away: 'Senegal', kickoff: '2026-06-23T02:00:00', info: 'Nowy Jork/East Rutherford', score_home: null, score_away: null },
+  { id: 44, group: 'Grupa J', stage: 'Jordania - Algieria', team_home: 'Jordania', team_away: 'Algieria', kickoff: '2026-06-23T05:00:00', info: 'San Francisco/Santa Clara', score_home: null, score_away: null },
+  { id: 45, group: 'Grupa K', stage: 'Portugalia - Uzbekistan', team_home: 'Portugalia', team_away: 'Uzbekistan', kickoff: '2026-06-23T19:00:00', info: 'Houston', score_home: null, score_away: null },
+  { id: 46, group: 'Grupa L', stage: 'Anglia - Ghana', team_home: 'Anglia', team_away: 'Ghana', kickoff: '2026-06-23T22:00:00', info: 'Boston/Foxborough', score_home: null, score_away: null },
+  // 24 czerwca (noc z 23 na 24)
+  { id: 47, group: 'Grupa L', stage: 'Panama - Chorwacja', team_home: 'Panama', team_away: 'Chorwacja', kickoff: '2026-06-24T01:00:00', info: 'Toronto', score_home: null, score_away: null },
+  { id: 48, group: 'Grupa K', stage: 'Kolumbia - DR Konga', team_home: 'Kolumbia', team_away: 'DR Konga', kickoff: '2026-06-24T04:00:00', info: 'Guadalajara/Zapopan', score_home: null, score_away: null },
+  { id: 49, group: 'Grupa B', stage: 'Szwajcaria - Kanada', team_home: 'Szwajcaria', team_away: 'Kanada', kickoff: '2026-06-24T21:00:00', info: 'Vancouver', score_home: null, score_away: null },
+  { id: 50, group: 'Grupa B', stage: 'Bośnia i Herc. - Katar', team_home: 'Bośnia i Hercegowina', team_away: 'Katar', kickoff: '2026-06-24T21:00:00', info: 'Seattle', score_home: null, score_away: null },
+  // 25 czerwca (noc z 24 na 25)
+  { id: 51, group: 'Grupa C', stage: 'Szkocja - Brazylia', team_home: 'Szkocja', team_away: 'Brazylia', kickoff: '2026-06-25T00:00:00', info: 'Miami/Miami Gardens', score_home: null, score_away: null },
+  { id: 52, group: 'Grupa C', stage: 'Maroko - Haiti', team_home: 'Maroko', team_away: 'Haiti', kickoff: '2026-06-25T00:00:00', info: 'Atlanta', score_home: null, score_away: null },
+  { id: 53, group: 'Grupa A', stage: 'Czechy - Meksyk', team_home: 'Czechy', team_away: 'Meksyk', kickoff: '2026-06-25T03:00:00', info: 'Meksyk', score_home: null, score_away: null },
+  { id: 54, group: 'Grupa A', stage: 'RPA - Korea Płd.', team_home: 'RPA', team_away: 'Korea Płd.', kickoff: '2026-06-25T03:00:00', info: 'Monterrey/Guadalupe', score_home: null, score_away: null },
+  { id: 55, group: 'Grupa E', stage: 'Curacao - WKS', team_home: 'Curacao', team_away: 'Wybrzeże Kości Słoniowej', kickoff: '2026-06-25T22:00:00', info: 'Filapelfia', score_home: null, score_away: null },
+  { id: 56, group: 'Grupa E', stage: 'Ekwador - Niemcy', team_home: 'Ekwador', team_away: 'Niemcy', kickoff: '2026-06-25T22:00:00', info: 'Nowy Jork/East Rutherford', score_home: null, score_away: null },
+  // 26 czerwca (noc z 25 na 26)
+  { id: 57, group: 'Grupa F', stage: 'Japonia - Szwecja', team_home: 'Japonia', team_away: 'Szwecja', kickoff: '2026-06-26T01:00:00', info: 'Dallas/Arlington', score_home: null, score_away: null },
+  { id: 58, group: 'Grupa F', stage: 'Tunezja - Holandia', team_home: 'Tunezja', team_away: 'Holandia', kickoff: '2026-06-26T01:00:00', info: 'Kansas City', score_home: null, score_away: null },
+  { id: 59, group: 'Grupa D', stage: 'Turcja - USA', team_home: 'Turcja', team_away: 'USA', kickoff: '2026-06-26T04:00:00', info: 'Los Angeles/Inglewood', score_home: null, score_away: null },
+  { id: 60, group: 'Grupa D', stage: 'Paragwaj - Australia', team_home: 'Paragwaj', team_away: 'Australia', kickoff: '2026-06-26T04:00:00', info: 'San Francisco/Santa Clara', score_home: null, score_away: null },
+  { id: 61, group: 'Grupa I', stage: 'Norwegia - Francja', team_home: 'Norwegia', team_away: 'Francja', kickoff: '2026-06-26T21:00:00', info: 'Boston/Foxborough', score_home: null, score_away: null },
+  { id: 62, group: 'Grupa I', stage: 'Senegal - Irak', team_home: 'Senegal', team_away: 'Irak', kickoff: '2026-06-26T21:00:00', info: 'Toronto', score_home: null, score_away: null },
+  // 27 czerwca (noc z 26 na 27)
+  { id: 63, group: 'Grupa H', stage: 'Rep. Ziel. Przyk. - Arabia Saud.', team_home: 'Rep. Zielonego Przylądka', team_away: 'Arabia Saudyjska', kickoff: '2026-06-27T02:00:00', info: 'Houston', score_home: null, score_away: null },
+  { id: 64, group: 'Grupa H', stage: 'Urugwaj - Hiszpania', team_home: 'Urugwaj', team_away: 'Hiszpania', kickoff: '2026-06-27T02:00:00', info: 'Guadalajara/Zapopan', score_home: null, score_away: null },
+  { id: 65, group: 'Grupa G', stage: 'Egipt - Iran', team_home: 'Egipt', team_away: 'Iran', kickoff: '2026-06-27T05:00:00', info: 'Seattle', score_home: null, score_away: null },
+  { id: 66, group: 'Grupa G', stage: 'Nowa Zelandia - Belgia', team_home: 'Nowa Zelandia', team_away: 'Belgia', kickoff: '2026-06-27T05:00:00', info: 'Vancouver', score_home: null, score_away: null },
+  { id: 67, group: 'Grupa L', stage: 'Panama - Anglia', team_home: 'Panama', team_away: 'Anglia', kickoff: '2026-06-27T23:00:00', info: 'Nowy Jork/East Rutherford', score_home: null, score_away: null },
+  { id: 68, group: 'Grupa L', stage: 'Chorwacja - Ghana', team_home: 'Chorwacja', team_away: 'Ghana', kickoff: '2026-06-27T23:00:00', info: 'Filadelfia', score_home: null, score_away: null },
+  // 28 czerwca (noc z 27 na 28)
+  { id: 69, group: 'Grupa K', stage: 'Kolumbia - Portugalia', team_home: 'Kolumbia', team_away: 'Portugalia', kickoff: '2026-06-28T01:30:00', info: 'Miami/Miami Gardens', score_home: null, score_away: null },
+  { id: 70, group: 'Grupa K', stage: 'DR Konga - Uzbekistan', team_home: 'DR Konga', team_away: 'Uzbekistan', kickoff: '2026-06-28T01:30:00', info: 'Atlanta', score_home: null, score_away: null },
+  { id: 71, group: 'Grupa J', stage: 'Algieria - Austria', team_home: 'Algieria', team_away: 'Austria', kickoff: '2026-06-28T04:00:00', info: 'Kansas City', score_home: null, score_away: null },
+  { id: 72, group: 'Grupa J', stage: 'Jordania - Argentyna', team_home: 'Jordania', team_away: 'Argentyna', kickoff: '2026-06-28T04:00:00', info: 'Dallas/Arlington', score_home: null, score_away: null }
+];
+
+const INITIAL_PLAYOFFS = [
+  ...Array.from({ length: 16 }, (_, i) => ({ id: 73 + i, group: 'Play-off', stage: '1/16 Finału', team_home: 'TBD', team_away: 'TBD', kickoff: `2026-06-${29 + Math.floor(i/4)}T18:00:00`, info: 'Stadion TBD', score_home: null, score_away: null })),
+  ...Array.from({ length: 8 }, (_, i) => ({ id: 89 + i, group: 'Play-off', stage: '1/8 Finału', team_home: 'TBD', team_away: 'TBD', kickoff: `2026-07-0${4 + Math.floor(i/2)}T20:00:00`, info: 'Stadion TBD', score_home: null, score_away: null })),
+  ...Array.from({ length: 4 }, (_, i) => ({ id: 97 + i, group: 'Play-off', stage: 'Ćwierćfinał', team_home: 'TBD', team_away: 'TBD', kickoff: `2026-07-${9 + Math.floor(i/2)}T20:00:00`, info: 'Stadion TBD', score_home: null, score_away: null })),
+  { id: 101, group: 'Play-off', stage: 'Półfinał 1', team_home: 'TBD', team_away: 'TBD', kickoff: '2026-07-14T21:00:00', info: 'Dallas', score_home: null, score_away: null },
+  { id: 102, group: 'Play-off', stage: 'Półfinał 2', team_home: 'TBD', team_away: 'TBD', kickoff: '2026-07-15T21:00:00', info: 'Atlanta', score_home: null, score_away: null },
+  { id: 103, group: 'Play-off', stage: 'Mecz o 3. miejsce', team_home: 'TBD', team_away: 'TBD', kickoff: '2026-07-18T23:00:00', info: 'Miami', score_home: null, score_away: null },
+  { id: 104, group: 'Play-off', stage: 'FINAŁ MŚ 2026', team_home: 'TBD', team_away: 'TBD', kickoff: '2026-07-19T21:00:00', info: 'New Jersey', score_home: null, score_away: null }
+];
+
+const DEFAULT_USERS = [
+  { id: 1, username: 'Tomek', pin: '1111', total_points: 0, stats_exact: 0, stats_trend: 0 },
+  { id: 2, username: 'Marcin', pin: '2222', total_points: 0, stats_exact: 0, stats_trend: 0 },
+  { id: 3, username: 'Jacek', pin: '3333', total_points: 0, stats_exact: 0, stats_trend: 0 },
+  { id: 4, username: 'Grzesiek', pin: '4444', total_points: 0, stats_exact: 0, stats_trend: 0 },
+  { id: 5, username: 'Jarek', pin: '5555', total_points: 0, stats_exact: 0, stats_trend: 0 },
+];
+
+export default function TyperApp() {
+  const [users, setUsers] = useState(() => {
+    const saved = localStorage.getItem('typer_users_list_v4');
+    return saved ? JSON.parse(saved) : DEFAULT_USERS;
+  });
+
+  const [user, setUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState('');
+  const [pin, setPin] = useState('');
+  const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('leaderboard'); 
+  const [adminSubTab, setAdminSubTab] = useState('groups');
+
+  const [matches, setMatches] = useState(() => {
+    const saved = localStorage.getItem('typer_group_matches_v4');
+    return saved ? JSON.parse(saved) : OFFICIAL_GROUP_MATCHES;
+  });
+
+  const [playoffs, setPlayoffs] = useState(() => {
+    const saved = localStorage.getItem('typer_playoff_matches_v4');
+    return saved ? JSON.parse(saved) : INITIAL_PLAYOFFS;
+  });
+
+  const [predictions, setPredictions] = useState(() => {
+    const saved = localStorage.getItem('typer_predictions_v4');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+  const [newPinInput, setNewPinInput] = useState('');
+
+  const [chatMessages, setChatMessages] = useState(() => {
+    const saved = localStorage.getItem('typer_chat_history_v4');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+<button 
+  onClick={() => {
+    localStorage.removeItem('typer_group_matches_v4');
+    alert('Pamięć meczów wyczyszczona! Odśwież stronę, aby załadować nowe daty.');
+    window.location.reload();
+  }} 
+  className="w-full bg-rose-600 text-white font-black py-3 rounded-xl mt-4"
+>
+  🔄 Odśwież terminarz z kodu (Resetuj bazę meczów)
+</button>
+  
+  const [newMessage, setNewMessage] = useState('');
+  const chatEndRef = useRef(null);
+
+  const [myInputs, setMyInputs] = useState({});
+  const [adminInputs, setAdminInputs] = useState({});
+  const [adminTeams, setAdminTeams] = useState({});
+
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatMessages, activeTab]);
+
+  useEffect(() => {
+    localStorage.setItem('typer_users_list_v4', JSON.stringify(users));
+  }, [users]);
+
+  useEffect(() => {
+    localStorage.setItem('typer_group_matches_v4', JSON.stringify(matches));
+  }, [matches]);
+
+  useEffect(() => {
+    localStorage.setItem('typer_playoff_matches_v4', JSON.stringify(playoffs));
+  }, [playoffs]);
+
+  useEffect(() => {
+    localStorage.setItem('typer_predictions_v4', JSON.stringify(predictions));
+  }, [predictions]);
+
+  useEffect(() => {
+    localStorage.setItem('typer_chat_history_v4', JSON.stringify(chatMessages));
+  }, [chatMessages]);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('typer_user_v4');
+    if (savedUser) {
+      const parsed = JSON.parse(savedUser);
+      const freshUserObj = users.find(u => u.id === parsed.id);
+      if (freshUserObj) setUser(freshUserObj);
+    }
+  }, [users]);
+
+  useEffect(() => {
+    if (user) {
+      const userPreds = predictions.filter(p => p.user_id === user.id);
+      const inputs = {};
+      userPreds.forEach(p => {
+        inputs[`${p.match_id}_home`] = p.pred_home;
+        inputs[`${p.match_id}_away`] = p.pred_away;
+      });
+      setMyInputs(inputs);
+    }
+  }, [user, predictions]);
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const foundUser = users.find(u => u.username === selectedUser && u.pin === pin);
+    if (foundUser) {
+      localStorage.setItem('typer_user_v4', JSON.stringify(foundUser));
+      setUser(foundUser);
+      setError('');
+    } else {
+      setError('Błędny kod PIN!');
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('typer_user_v4');
+    setUser(null);
+    setPin('');
+  };
+
+  const handleChangePin = (e) => {
+    e.preventDefault();
+    if (newPinInput.length !== 4 || isNaN(parseInt(newPinInput))) {
+      alert('PIN musi składać się z dokładnie 4 cyfr!');
+      return;
+    }
+    setUsers(prevUsers => prevUsers.map(u => u.id === user.id ? { ...u, pin: newPinInput } : u));
+    alert('Twój osobisty kod PIN został pomyślnie zmieniony! 👋');
+    setIsPinModalOpen(false);
+    setNewPinInput('');
+  };
+
+  const isPredictionLocked = (kickoffTime) => {
+    const now = new Date();
+    const kickoff = new Date(kickoffTime);
+    return (kickoff - now) / 1000 / 60 <= 5; 
+  };
+
+  const handleSavePrediction = (matchId, kickoff) => {
+    if (isPredictionLocked(kickoff)) {
+      alert('Za późno! Typowanie zablokowane na 5 minut przed gwizdkiem.');
+      return;
+    }
+
+    const homeRaw = myInputs[`${matchId}_home`];
+    const awayRaw = myInputs[`${matchId}_away`];
+
+    if (homeRaw === undefined || homeRaw === '' || awayRaw === undefined || awayRaw === '') {
+      alert('Wpisz kompletny wynik bramkowy!');
+      return;
+    }
+
+    const homeVal = parseInt(homeRaw);
+    const awayVal = parseInt(awayRaw);
+
+    setPredictions(prev => {
+      const filtered = prev.filter(p => !(p.user_id === user.id && p.match_id === matchId));
+      return [...filtered, { id: Date.now(), user_id: user.id, match_id: matchId, pred_home: homeVal, pred_away: awayVal, points_earned: 0 }];
+    });
+    alert('Typ zapisany pomyślnie! ⚽');
+  };
+
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
+
+    const msg = {
+      id: Date.now(),
+      user: user.username,
+      text: newMessage,
+      time: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+    };
+    setChatMessages(prev => [...prev, msg].slice(-100));
+    setNewMessage('');
+  };
+
+  const handleUpdatePlayoffTeams = (matchId) => {
+    const home = adminTeams[`${matchId}_home_team`] || 'TBD';
+    const away = adminTeams[`${matchId}_away_team`] || 'TBD';
+    setPlayoffs(prev => prev.map(m => m.id === matchId ? { ...m, team_home: home, team_away: away } : m));
+    alert('Zmieniono reprezentacje w parze pucharowej!');
+  };
+
+  const handleAdminSaveResult = (matchId, isPlayoff = false) => {
+    const homeRaw = adminInputs[`${matchId}_home`];
+    const awayRaw = adminInputs[`${matchId}_away`];
+
+    if (homeRaw === undefined || homeRaw === '' || awayRaw === undefined || awayRaw === '') {
+      alert('Podaj prawidłowy wynik!');
+      return;
+    }
+
+    const homeScore = parseInt(homeRaw);
+    const awayScore = parseInt(awayRaw);
+
+    if (isPlayoff) {
+      setPlayoffs(prev => prev.map(m => m.id === matchId ? { ...m, score_home: homeScore, score_away: awayScore } : m));
+    } else {
+      setMatches(prev => prev.map(m => m.id === matchId ? { ...m, score_home: homeScore, score_away: awayScore } : m));
+    }
+
+    const updatedPredictions = predictions.map(p => {
+      if (p.match_id !== matchId) return p;
+      let points = 0;
+      const isExactMatch = p.pred_home === homeScore && p.pred_away === awayScore;
+      const realSign = Math.sign(homeScore - awayScore); 
+      const predSign = Math.sign(p.pred_home - p.pred_away);
+      if (isExactMatch) points = 3;
+      else if (realSign === predSign) points = 2;
+
+      return { ...p, points_earned: points };
+    });
+
+    setPredictions(updatedPredictions);
+
+    setUsers(prevUsers => prevUsers.map(u => {
+      const uPreds = updatedPredictions.filter(p => p.user_id === u.id);
+      
+      let total = 0;
+      let exactCount = 0;
+      let trendCount = 0;
+
+      uPreds.forEach(p => {
+        const associatedMatch = [...matches, ...playoffs].find(m => m.id === p.match_id);
+        if (associatedMatch && associatedMatch.score_home !== null && associatedMatch.score_home !== undefined) {
+          total += p.points_earned;
+          if (p.points_earned === 3) exactCount++;
+          if (p.points_earned === 2) trendCount++;
+        }
+      });
+
+      return { ...u, total_points: total, stats_exact: exactCount, stats_trend: trendCount };
+    }));
+
+    alert('Wynik zapisany. Punkty przeliczone automatycznie! 📊');
+  };
+
+  const handleForceResetMatches = () => {
+    if(window.confirm("Czy na pewno chcesz zresetować listę meczów w pamięci do najnowszego oficjalnego terminarza?")) {
+      setMatches(OFFICIAL_GROUP_MATCHES);
+      localStorage.setItem('typer_group_matches_v4', JSON.stringify(OFFICIAL_GROUP_MATCHES));
+      alert("Terminarz zsynchronizowany pomyślnie z najnowszą rozpiską!");
+    }
+  };
+
+  const formatDate = (kickoffStr) => {
+    const dt = new Date(kickoffStr);
+    const days = ['niedz.', 'pon.', 'wt.', 'śr.', 'czw.', 'pt.', 'sob.'];
+    
+    const day = dt.getDate();
+    const month = dt.getMonth(); 
+    const hour = String(dt.getHours()).padStart(2, '0');
+    const minute = String(dt.getMinutes()).padStart(2, '0');
+    
+    return `${day} ${month === 5 ? 'cze' : 'lip'} (${days[dt.getDay()]}), ${hour}:${minute}`;
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-teal-950 text-white font-sans flex flex-col">
+      
+      {/* FORMULARZ LOGOWANIA */}
+      {!user ? (
+        <div className="min-h-screen flex flex-col justify-center items-center px-4">
+          <div className="w-full max-w-sm bg-slate-900/80 backdrop-blur-xl rounded-3xl shadow-2xl p-6 border border-emerald-500/20">
+            <div className="text-center mb-8">
+              <span className="text-4xl block mb-2">🏆</span>
+              <h1 className="text-3xl font-black bg-gradient-to-r from-amber-400 via-emerald-400 to-teal-300 bg-clip-text text-transparent uppercase tracking-wider">TYPER MŚ 2026</h1>
+              <p className="text-amber-400 text-xs font-black tracking-widest mt-1 bg-amber-400/10 py-1 px-3 rounded-full inline-block border border-amber-400/20">WERSJA BETA</p>
+            </div>
+            
+            <form onSubmit={handleLogin} className="space-y-5">
+              <select value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)} className="w-full bg-slate-800 text-white rounded-2xl px-4 py-3.5 border border-slate-700 font-medium cursor-pointer" required>
+                <option value="">-- Wybierz zawodnika --</option>
+                {users.map(u => <option key={u.id} value={u.username}>{u.username}</option>)}
+              </select>
+              <input type="password" maxLength={4} pattern="\d*" inputMode="numeric" value={pin} onChange={(e) => setPin(e.target.value)} placeholder="PIN (••••)" className="w-full bg-slate-800 text-white text-center text-2xl tracking-widest font-bold rounded-2xl px-4 py-3.5 border border-slate-700 focus:outline-none" required />
+              {error && <p className="text-rose-400 text-xs text-center font-bold bg-rose-500/10 py-2.5 rounded-xl">{error}</p>}
+              <button type="submit" className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black uppercase py-4 rounded-2xl transition-all">Wejdź do gry ➔</button>
+            </form>
+          </div>
+        </div>
+      ) : (
+        <>
+          <header className="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex justify-between items-center sticky top-0 z-50">
+            <span className="font-black text-lg bg-gradient-to-r from-emerald-400 to-amber-300 bg-clip-text text-transparent uppercase">MŚ 2026</span>
+            <div className="flex items-center space-x-1">
+              <span className="text-xs bg-slate-800 text-emerald-300 px-2.5 py-1 rounded-lg border border-slate-700 font-bold mr-2">👤 {user.username}</span>
+              <button onClick={() => setIsPinModalOpen(true)} className="text-2xs bg-slate-850 text-slate-200 hover:text-white px-2.5 py-1 rounded-lg border border-slate-700 font-bold transition">Zmień PIN</button>
+              <button onClick={handleLogout} className="text-xs text-slate-400 hover:text-rose-400 font-bold pl-2">Wyloguj</button>
+            </div>
+          </header>
+
+          <nav className="sticky top-[53px] z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 py-2 px-2 flex justify-center space-x-1 shadow-md overflow-x-auto">
+            <button onClick={() => setActiveTab('leaderboard')} className={`px-3 py-2 rounded-xl text-xs font-black shrink-0 ${activeTab === 'leaderboard' ? 'text-amber-400 bg-slate-800 border border-slate-700' : 'text-slate-400'}`}>📊 Tabela</button>
+            <button onClick={() => setActiveTab('matches')} className={`px-3 py-2 rounded-xl text-xs font-black shrink-0 ${activeTab === 'matches' ? 'text-emerald-400 bg-slate-800 border border-slate-700' : 'text-slate-400'}`}>📅 Faza grupowa</button>
+            <button onClick={() => setActiveTab('playoffs_tab')} className={`px-3 py-2 rounded-xl text-xs font-black shrink-0 ${activeTab === 'playoffs_tab' ? 'text-indigo-400 bg-slate-800 border border-slate-700' : 'text-slate-400'}`}>🏆 Play-offy</button>
+            <button onClick={() => setActiveTab('predictions_list')} className={`px-3 py-2 rounded-xl text-xs font-black shrink-0 ${activeTab === 'predictions_list' ? 'text-teal-400 bg-slate-800 border border-slate-700' : 'text-slate-400'}`}>👁️ Podgląd</button>
+            <button onClick={() => setActiveTab('chat')} className={`px-3 py-2 rounded-xl text-xs font-black shrink-0 ${activeTab === 'chat' ? 'text-pink-400 bg-slate-800 border border-slate-700' : 'text-slate-400'}`}>💬 Czat</button>
+            {user.username === 'Tomek' && (
+              <button onClick={() => setActiveTab('admin')} className={`px-3 py-2 rounded-xl text-xs font-black shrink-0 ${activeTab === 'admin' ? 'text-amber-400 bg-amber-500/10 border border-amber-400/20' : 'text-slate-500'}`}>⚙️ Admin</button>
+            )}
+          </nav>
+
+          <main className="flex-1 p-4 max-w-4xl mx-auto w-full">
+            
+            {/* TABELA Z ETYKIETĄ "1X2" ZAMIAST TENDENCJI */}
+            {activeTab === 'leaderboard' && (
+              <div className="space-y-4 max-w-md mx-auto">
+                <h2 className="text-lg font-extrabold text-slate-200">📊 Tabela Wyników Ekipy</h2>
+                <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+                  <div className="divide-y divide-slate-800/60">
+                    {[...users].sort((a, b) => b.total_points - a.total_points).map((player, index) => (
+                      <div key={player.id} className={`flex items-start justify-between px-6 py-4.5 ${player.username === user.username ? 'bg-emerald-500/5' : ''}`}>
+                        
+                        {/* Lewa strona */}
+                        <div className="flex flex-col flex-1 pr-4">
+                          <div className="text-base font-bold flex items-baseline">
+                            <span className="font-black text-slate-500 mr-2">{index + 1}.</span>
+                            <span className={player.username === user.username ? 'text-emerald-300' : 'text-slate-200'}>
+                              {player.username} {index === 0 ? '👑 ' : ''}
+                            </span>
+                          </div>
+                          <div className="text-3xs text-slate-400 font-normal mt-1 space-x-2">
+                            <span>🎯 Dokładne: <strong>{player.stats_exact ?? 0}</strong></span>
+                            <span>📈 1X2: <strong>{player.stats_trend ?? 0}</strong></span>
+                          </div>
+                        </div>
+
+                        {/* Prawa strona */}
+                        <div className="text-right shrink-0 flex flex-col items-center pt-0.5">
+                          <span className="text-amber-400 font-black text-xl leading-none">{player.total_points}</span>
+                          <span className="text-2xs text-amber-500/80 font-bold block mt-0.5">pkt</span>
+                        </div>
+
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* FAZA GRUPOWA */}
+            {activeTab === 'matches' && (
+              <div className="space-y-5 max-w-md mx-auto">
+                <h2 className="text-lg font-extrabold text-slate-200">📅 Mecze Fazy Grupowej</h2>
+                {matches.map((match) => {
+                  const locked = isPredictionLocked(match.kickoff);
+                  return (
+                    <div key={match.id} className="bg-slate-900 rounded-2xl p-4 border border-slate-800 space-y-3 shadow-md relative">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs bg-slate-800 px-2.5 py-1 rounded text-emerald-400 font-bold font-mono">
+                          {match.id}. {match.group}: {formatDate(match.kickoff)}
+                        </span>
+                        {locked && <span className="text-2xs bg-rose-500/10 text-rose-400 px-2 py-0.5 rounded border border-rose-500/20 font-black">🔒 Zamknięte</span>}
+                      </div>
+
+                      <div className="text-center font-black text-slate-100 text-base py-1">
+                        {match.team_home} - {match.team_away}
+                        <span className="block text-3xs font-medium text-slate-500 mt-0.5">📍 Lokalizacja: {match.info}</span>
+                      </div>
+
+                      <div className="flex justify-center items-center space-x-2">
+                        <input type="number" disabled={locked} value={myInputs[`${match.id}_home`] ?? ''} onChange={(e) => setMyInputs({...myInputs, [`${match.id}_home`]: e.target.value})} className="w-11 h-11 bg-slate-950 text-center text-xl font-black rounded-xl text-emerald-400 disabled:text-slate-600 focus:outline-none" placeholder="-" />
+                        <span className="text-slate-600 font-bold">:</span>
+                        <input type="number" disabled={locked} value={myInputs[`${match.id}_away`] ?? ''} onChange={(e) => setMyInputs({...myInputs, [`${match.id}_away`]: e.target.value})} className="w-11 h-11 bg-slate-950 text-center text-xl font-black rounded-xl text-emerald-400 disabled:text-slate-600 focus:outline-none" placeholder="-" />
+                      </div>
+
+                      {match.score_home !== null && match.score_home !== undefined && (
+                        <div className="text-center text-2xs text-amber-400 font-bold bg-amber-400/5 py-1.5 rounded-lg border border-amber-400/10">
+                          WYNIK KOŃCOWY: {match.score_home} : {match.score_away}
+                        </div>
+                      )}
+
+                      {!locked && (
+                        <button onClick={() => handleSavePrediction(match.id, match.kickoff)} className="w-full bg-slate-800 text-emerald-400 text-xs font-bold py-2 rounded-xl border border-slate-700 transition">Zapisz typ</button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* PLAY-OFFY */}
+            {activeTab === 'playoffs_tab' && (
+              <div className="space-y-5 max-w-md mx-auto">
+                <h2 className="text-lg font-extrabold text-indigo-400">🏆 Faza Pucharowa</h2>
+                {playoffs.map((match) => {
+                  const locked = isPredictionLocked(match.kickoff) || match.team_home === 'TBD';
+                  return (
+                    <div key={match.id} className="bg-slate-900 rounded-2xl p-4 border border-indigo-500/20 space-y-3 shadow-md">
+                      <div className="flex justify-between items-center text-2xs font-bold">
+                        <span className="text-indigo-400 font-mono font-black">{match.id}. {match.stage}</span>
+                        <span className="text-slate-400 pl-1">{formatDate(match.kickoff)}</span>
+                      </div>
+
+                      <div className="text-center font-black text-slate-100 text-base py-1">
+                        {match.team_home} - {match.team_away}
+                      </div>
+
+                      <div className="flex justify-center items-center space-x-2">
+                        <input type="number" disabled={locked} value={myInputs[`${match.id}_home`] ?? ''} onChange={(e) => setMyInputs({...myInputs, [`${match.id}_home`]: e.target.value})} className="w-11 h-11 bg-slate-950 text-center text-xl font-black rounded-xl text-indigo-400 disabled:text-slate-700 focus:outline-none" placeholder="-" />
+                        <span className="text-slate-600 font-bold">::</span>
+                        <input type="number" disabled={locked} value={myInputs[`${match.id}_away`] ?? ''} onChange={(e) => setMyInputs({...myInputs, [`${match.id}_away`]: e.target.value})} className="w-11 h-11 bg-slate-950 text-center text-xl font-black rounded-xl text-indigo-400 disabled:text-slate-700 focus:outline-none" placeholder="-" />
+                      </div>
+
+                      {match.score_home !== null && match.score_home !== undefined && (
+                        <div className="text-center text-2xs text-amber-400 font-bold bg-amber-400/5 py-1.5 rounded-lg border border-amber-400/10">
+                          WYNIK: {match.score_home} : {match.score_away}
+                        </div>
+                      )}
+
+                      {!locked && match.team_home !== 'TBD' && (
+                        <button onClick={() => handleSavePrediction(match.id, match.kickoff)} className="w-full bg-slate-800 text-indigo-400 text-xs font-bold py-2 rounded-xl border border-slate-700">Zapisz typ pucharowy</button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* PODGLĄD TYPÓW LIVE */}
+            {activeTab === 'predictions_list' && (
+              <div className="space-y-4 w-full">
+                <h2 className="text-lg font-extrabold text-slate-200">👁️ Podgląd Typów Ekipy (Live)</h2>
+                <div className="w-full overflow-x-auto block border border-slate-800 rounded-2xl bg-slate-900/80 shadow-2xl">
+                  <table className="min-w-full divide-y divide-slate-800 text-left whitespace-nowrap">
+                    <thead className="bg-slate-950">
+                      <tr>
+                        <th className="px-4 py-3.5 text-xs font-black uppercase text-slate-400">Mecz</th>
+                        {users.map(u => <th key={u.id} className="px-3 py-3.5 text-xs font-black uppercase text-emerald-400">{u.username}</th>)}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60">
+                      {[...matches, ...playoffs].map((match) => {
+                        const locked = isPredictionLocked(match.kickoff);
+                        const hasRealResult = match.score_home !== null && match.score_home !== undefined;
+                        
+                        return (
+                          <tr key={match.id} className="hover:bg-slate-800/30 transition-colors">
+                            <td className="px-4 py-3.5 text-xs font-bold text-slate-200">
+                              <span className="text-slate-400 font-mono text-3xs mr-1">{match.id}.</span>
+                              <span className="text-slate-100 font-black">{match.team_home} - {match.team_away}</span>
+                              {hasRealResult && (
+                                <span className="ml-2 text-2xs bg-amber-400/10 text-amber-400 px-1.5 py-0.5 rounded font-black">
+                                  ({match.score_home}:{match.score_away})
+                                </span>
+                              )}
+                            </td>
+                            {users.map((u) => {
+                              const pred = predictions.find(p => p.match_id === match.id && p.user_id === u.id);
+                              const hasTyped = pred !== undefined;
+
+                              let cellBg = "transparent";
+                              let textColor = "text-slate-400";
+                              
+                              if (hasRealResult && hasTyped) {
+                                if (pred.points_earned === 3) {
+                                  cellBg = "bg-emerald-500/20 border border-emerald-500/30"; 
+                                  textColor = "text-emerald-400 font-black";
+                                } else if (pred.points_earned === 2) {
+                                  cellBg = "bg-amber-500/10 border border-amber-500/20"; 
+                                  textColor = "text-amber-300 font-bold";
+                                } else {
+                                  cellBg = "bg-rose-500/10"; 
+                                  textColor = "text-rose-400/70";
+                                }
+                              } else if (hasTyped) {
+                                textColor = "text-emerald-400 font-medium";
+                              }
+
+                              return (
+                                <td key={u.id} className={`px-3 py-3.5 text-sm font-mono text-center ${cellBg}`}>
+                                  {locked || u.id === user.id ? (
+                                    hasTyped ? (
+                                      <span className={textColor}>{pred.pred_home}:{pred.pred_away}</span>
+                                    ) : (
+                                      <span className="text-slate-600">-:-</span>
+                                    )
+                                  ) : (
+                                    hasTyped ? (
+                                      <span className="text-emerald-400 text-xs">✅</span>
+                                    ) : (
+                                      <span className="text-slate-600 text-xs">❌</span>
+                                    )
+                                  )}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* CZAT GRUPOWY */}
+            {activeTab === 'chat' && (
+              <div className="max-w-md mx-auto flex flex-col h-[65vh] bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+                <div className="bg-slate-950 px-4 py-3 border-b border-slate-800">
+                  <span className="font-bold text-sm text-pink-400">💬 Wiadomości Ekipy</span>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  {chatMessages.map((msg) => {
+                    const isMe = msg.user === user.username;
+                    return (
+                      <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                        <div className="flex items-center space-x-1.5 mb-0.5 text-3xs text-slate-400 font-bold">
+                          <span>{msg.user}</span> <span className="text-slate-600 font-normal">{msg.time}</span>
+                        </div>
+                        <div className={`px-3 py-2 rounded-2xl text-xs max-w-[85%] break-words font-medium ${isMe ? 'bg-pink-600 text-white rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none'}`}>
+                          {msg.text}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div ref={chatEndRef} />
+                </div>
+                <form onSubmit={handleSendMessage} className="p-3 bg-slate-950 border-t border-slate-800 flex space-x-2">
+                  <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Napisz do chłopaków..." className="flex-1 bg-slate-900 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none" maxLength={200} />
+                  <button type="submit" className="bg-pink-600 text-white font-bold text-xs px-4 py-2 rounded-xl">Wyślij</button>
+                </form>
+              </div>
+            )}
+
+            {/* PANEL ADMINA TOMKA */}
+            {activeTab === 'admin' && user.username === 'Tomek' && (
+              <div className="space-y-6 max-w-md mx-auto">
+                <div className="border-b border-slate-800 pb-3">
+                  <h2 className="text-lg font-extrabold text-amber-400">⚙️ Panel Zarządzania Tomka</h2>
+                  <div className="flex flex-col space-y-2 mt-2">
+                    <button onClick={handleForceResetMatches} className="w-full text-2xs bg-rose-500/20 text-rose-300 font-bold py-2 px-3 rounded-xl border border-rose-500/30">
+                      🔄 Wymuś pełny reset i nadpisanie terminarza w przeglądarce (V4)
+                    </button>
+                  </div>
+                  <div className="flex space-x-2 mt-3 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                    <button onClick={() => setAdminSubTab('groups')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${adminSubTab === 'groups' ? 'bg-emerald-500 text-slate-950' : 'text-slate-400'}`}>Faza Grupowa (1-72)</button>
+                    <button onClick={() => setAdminSubTab('playoffs')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${adminSubTab === 'playoffs' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}>Play-offy (73-104)</button>
+                  </div>
+                </div>
+                
+                {adminSubTab === 'groups' && (
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-black text-emerald-400 uppercase tracking-wider">➔ Wprowadź wyniki grupowe</h3>
+                    {matches.map(match => (
+                      <div key={match.id} className="bg-slate-900 rounded-xl p-4 border border-slate-800 space-y-3">
+                        <div className="flex justify-between text-3xs font-bold text-slate-400 tracking-wide">
+                          <span>Mecz {match.id} • {match.group} </span> 
+                          <span className="text-amber-400 font-black">{match.team_home} - {match.team_away}</span>
+                        </div>
+                        <div className="flex items-center justify-center space-x-3">
+                          <input type="number" placeholder="Gosp" value={adminInputs[`${match.id}_home`] ?? ''} onChange={(e) => setAdminInputs({...adminInputs, [`${match.id}_home`]: e.target.value})} className="w-14 h-10 bg-slate-950 text-white rounded-lg text-center font-black border border-slate-800 focus:outline-none" />
+                          <span className="font-bold text-slate-600">:</span>
+                          <input type="number" placeholder="Gość" value={adminInputs[`${match.id}_away`] ?? ''} onChange={(e) => setAdminInputs({...adminInputs, [`${match.id}_away`]: e.target.value})} className="w-14 h-10 bg-slate-950 text-white rounded-lg text-center font-black border border-slate-800 focus:outline-none" />
+                        </div>
+                        <button onClick={() => handleAdminSaveResult(match.id, false)} className="w-full bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs uppercase">Zatwierdź wynik</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {adminSubTab === 'playoffs' && (
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <h3 className="text-xs font-black text-indigo-400 uppercase tracking-wider">➔ 1. Drabinka pucharowa</h3>
+                      {playoffs.map(match => (
+                        <div key={match.id} className="bg-slate-900/60 rounded-xl p-3 border border-indigo-500/20 space-y-2">
+                          <div className="text-3xs text-slate-400 font-bold">{match.stage} (Mecz {match.id})</div>
+                          <div className="flex items-center space-x-2">
+                            <input type="text" placeholder="Gospodarz" value={adminTeams[`${match.id}_home_team`] ?? ''} onChange={(e) => setAdminTeams({...adminTeams, [`${match.id}_home_team`]: e.target.value})} className="w-1/2 bg-slate-950 px-2 py-1 text-xs rounded border border-slate-800 text-center" />
+                            <span className="text-slate-600 font-bold">vs</span>
+                            <input type="text" placeholder="Gość" value={adminTeams[`${match.id}_away_team`] ?? ''} onChange={(e) => setAdminTeams({...adminTeams, [`${match.id}_away_team`]: e.target.value})} className="w-1/2 bg-slate-950 px-2 py-1 text-xs rounded border border-slate-800 text-center" />
+                          </div>
+                          <button onClick={() => handleUpdatePlayoffTeams(match.id)} className="w-full bg-indigo-600 text-white text-3xs font-black py-1 rounded uppercase">Zapisz parę</button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="space-y-4 pt-4 border-t border-slate-800">
+                      <h3 className="text-xs font-black text-amber-400 uppercase tracking-wider">➔ 2. Wprowadź wyniki play-off</h3>
+                      {playoffs.map(match => (
+                        <div key={match.id} className="bg-slate-900 rounded-xl p-4 border border-slate-800 space-y-3">
+                          <div className="flex justify-between text-3xs font-bold text-slate-400">
+                            <span>Mecz {match.id}</span> 
+                            <span className="text-indigo-400">{match.team_home} - {match.team_away}</span>
+                          </div>
+                          <div className="flex items-center justify-center space-x-3">
+                            <input type="number" placeholder="Gosp" value={adminInputs[`${match.id}_home`] ?? ''} onChange={(e) => setAdminInputs({...adminInputs, [`${match.id}_home`]: e.target.value})} className="w-14 h-10 bg-slate-950 text-white rounded-lg text-center font-black border border-slate-800" />
+                            <span className="font-bold text-slate-600">:</span>
+                            <input type="number" placeholder="Gość" value={adminInputs[`${match.id}_away`] ?? ''} onChange={(e) => setAdminInputs({...adminInputs, [`${match.id}_away`]: e.target.value})} className="w-14 h-10 bg-slate-950 text-white rounded-lg text-center font-black border border-slate-800" />
+                          </div>
+                          <button onClick={() => handleAdminSaveResult(match.id, true)} className="w-full bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs uppercase">Zatwierdź wynik</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+          </main>
+        </>
+      )}
+
+      {/* MODAL ZMIANY PIN */}
+      {isPinModalOpen && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+          <div className="bg-slate-900 rounded-2xl p-6 border border-slate-800 max-w-sm w-full space-y-4">
+            <h3 className="text-base font-bold text-slate-100">🔒 Zmień swój osobisty PIN</h3>
+            <p className="text-2xs text-slate-400">Wpisz nowy, 4-cyfrowy kod, którym będziesz logować się do aplikacji.</p>
+            <form onSubmit={handleChangePin} className="space-y-4">
+              <input type="password" maxLength={4} pattern="\d*" inputMode="numeric" placeholder="Nowy PIN (••••)" value={newPinInput} onChange={(e) => setNewPinInput(e.target.value)} className="w-full bg-slate-950 text-center text-xl font-bold tracking-widest text-emerald-400 py-2.5 rounded-xl border border-slate-800 focus:outline-none" required />
+              <div className="flex space-x-2">
+                <button type="button" onClick={() => setIsPinModalOpen(false)} className="flex-1 bg-slate-800 text-slate-400 text-xs font-bold py-2 rounded-xl">Anuluj</button>
+                <button type="submit" className="flex-1 bg-emerald-500 text-slate-950 text-xs font-black py-2 rounded-xl uppercase">Zapisz</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
